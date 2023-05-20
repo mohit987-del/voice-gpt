@@ -1,4 +1,3 @@
-import 'dart:html';
 
 import 'package:assistant/pallete.dart';
 import 'package:flutter/material.dart';
@@ -15,35 +14,35 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
-  final speechToText = SpeechToText() ;
-  String lastWords="";
+  SpeechToText _speechToText = SpeechToText();
+  bool _speechEnabled = false;
+  String _lastWords = 'yo';
 
-@override
+  @override
   void initState() {
     super.initState();
-    initSpeechToText();
+    _initSpeech();
   }
-  Future<void> initSpeechToText() async{
-    await speechToText.initialize();
+
+  void _initSpeech() async {
+    _speechEnabled = await _speechToText.initialize();
     setState(() {});
   }
-  Future<void> startListening() async {
-    await speechToText.listen(onResult: onSpeechResult);
+
+  void _startListening() async {
+    await _speechToText.listen(onResult: _onSpeechResult);
     setState(() {});
   }
-  Future<void> stopListening() async {
-    await speechToText.stop();
+
+  void _stopListening() async {
+    await _speechToText.stop();
     setState(() {});
   }
-  void onSpeechResult(SpeechRecognitionResult result) {
+
+  void _onSpeechResult(SpeechRecognitionResult result) {
     setState(() {
-      lastWords = result.recognizedWords;
+      _lastWords = result.recognizedWords;
     });
-  }
-  @override
-  void dispose() {
-    super.dispose();
-    speechToText.stop();
   }
    
   @override
@@ -108,8 +107,8 @@ class _HomepageState extends State<Homepage> {
                 ),
               ),
             ),
-            Column(
-              children: const [
+             const Column(
+              children:  [
                 SuggestionWidget(
                   heading: "ChatGPT",
                   data:
@@ -135,16 +134,9 @@ class _HomepageState extends State<Homepage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async{
-          if(await speechToText.hasPermission && speechToText.isNotListening ){
-            await startListening();
-          }else if(speechToText.isListening ){
-            await stopListening();
-          }else{
-            initSpeechToText();
-          }
+            _speechToText.isNotListening ? _startListening() : _stopListening() ;
         },
         child: Icon(Icons.mic),
-        
       ),
     );
   }
